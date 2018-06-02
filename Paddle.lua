@@ -50,6 +50,60 @@ function Paddle:update(dt)
     end
 end
 
+function Paddle:auto(ball, PADDLE_SPEED)
+    self.dy = 0
+    if not paddleWillHitBall(self, ball) then
+        if (ball.y < self.y) then
+            self.dy = -PADDLE_SPEED
+        elseif ( (ball.y + ball.height) > (self.y + self.height)) then
+            self.dy = PADDLE_SPEED
+        end
+    end
+end
+
+paddleWillHitBall = function(paddle)
+
+    local projectY = projectBall(paddle)
+
+    if(projectY == nil) then
+        return true;
+    end
+
+    if ((projectY < paddle.y) or (projectY + ball.height > paddle.y + paddle.height)) then
+        return false
+    else
+        return true
+    end
+end
+
+projectBall = function(paddle)
+    halfWidth = (math.floor(VIRTUAL_WIDTH / 2) - 1 )
+
+    local ballX = ball.x
+    local ballY = ball.y
+
+    if ( paddle.x < halfWidth ) and ( ball.dx < 0 ) then
+        -- left paddle --> dx < 0
+        
+        while(ballX <= 0) do
+            ballX = ballX + ball.dx
+            ballY = ballY + ball.dy
+        end
+
+        return ballY
+        
+    elseif ( paddle.x >= halfWidth ) and ( ball.dx > 0 )  then
+        -- right paddle --> dx > 0
+
+        while (ballX + ball.width >= VIRTUAL_WIDTH) do
+            ballX = ballX + ball.dx
+            ballY = ballY + ball.dy
+        end
+
+        return ballY
+    end
+end
+
 --[[
     To be called by our main function in `love.draw`, ideally. Uses
     LÖVE2D's `rectangle` function, which takes in a draw mode as the first
@@ -58,6 +112,10 @@ end
     newest version of LÖVE2D, you can even draw rounded rectangles!
 ]]
 function Paddle:render()
-    print(self.x, self.y, self.width, self.height)
+    --print(self.x, self.y, self.width, self.height)
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
+    -- love.graphics.line(self.x, math.floor(self.height / 2 + self.y), ball.x, math.floor(ball.vCenter + ball.y))
+    -- love.graphics.line(self.x, self.y, ball.x, math.floor(ball.vCenter + ball.y))
+    -- love.graphics.line(self.x, self.y + self.height, ball.x, math.floor(ball.vCenter + ball.y))
+    -- love.graphics.points(self.x + self.width + 1, self.y + self.height / 2)
 end

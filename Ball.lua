@@ -24,6 +24,8 @@ function Ball:init(x, y, width, height)
     -- X and Y axis, since the ball can move in two dimensions
     self.dy = 0
     self.dx = 0
+
+    self.vCenter = self.height / 2;
 end
 
 --[[

@@ -114,6 +114,10 @@ function love.load()
     -- 3. 'play' (the ball is in play, bouncing between paddles)
     -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
+
+    -- Paddle AI. Disabled at the startup
+    p1AI = false;
+    p2AI = false;
 end
 
 --[[
@@ -149,6 +153,9 @@ function love.update(dt)
         -- slightly increasing it, then altering the dy based on the position
         -- at which it collided, then playing a sound effect
         if ball:collides(player1) then
+
+           calculateCollision(ball, player1)
+
             ball.dx = -ball.dx * 1.03
             ball.x = player1.x + 5
 
@@ -233,21 +240,29 @@ function love.update(dt)
     -- paddles can move no matter what state we're in
     --
     -- player 1
-    if love.keyboard.isDown('w') then
-        player1.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('s') then
-        player1.dy = PADDLE_SPEED
+    if p1AI == false then
+        if love.keyboard.isDown('w') then
+            player1.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('s') then
+            player1.dy = PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
     else
-        player1.dy = 0
+        player1:auto(ball, PADDLE_SPEED)
     end
-
+  
     -- player 2
-    if love.keyboard.isDown('up') then
-        player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
-        player2.dy = PADDLE_SPEED
-    else
-        player2.dy = 0
+    if p2AI == false then
+        if love.keyboard.isDown('up') then
+            player2.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('down') then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
+    else   
+        player2:auto(ball, PADDLE_SPEED)
     end
 
     -- update our ball based on its DX and DY only if we're in play state;
@@ -296,6 +311,18 @@ function love.keypressed(key)
                 servingPlayer = 1
             end
         end
+    elseif key == 'n' then
+        if p1AI == false then
+            p1AI = true
+        else
+            p1AI = false
+        end
+    elseif key == 'm' then
+        if p2AI == false then
+            p2AI = true
+        else
+            p2AI = false
+        end
     end
 end
 
@@ -306,7 +333,6 @@ end
 function love.draw()
     -- begin drawing with push, in our virtual resolution
     push:apply('start')
-
     
     -- render different things depending on which part of the game we're in
     if gameState == 'start' then
@@ -340,6 +366,7 @@ function love.draw()
 
     -- display FPS for debugging; simply comment out to remove
     displayFPS()
+    displayAI()
 
     -- end our drawing to push
     push:apply('end')
@@ -348,9 +375,19 @@ end
 --[[
     Simple function for rendering the scores.
 ]]
+function displayAI()
+    -- score AI
+
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print('AI P1: ' .. (p1AI and "enabled" or "disabled") , 10, VIRTUAL_HEIGHT -10)
+    love.graphics.print('AI P2: ' .. (p2AI and "enabled" or "disabled"), VIRTUAL_WIDTH - 100, VIRTUAL_HEIGHT -10)
+end
+
 function displayScore()
     -- score display
     love.graphics.setFont(scoreFont)
+    love.graphics.setColor(0, 1, 0, 1)
     love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50,
         VIRTUAL_HEIGHT / 3)
     love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
@@ -365,4 +402,25 @@ function displayFPS()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 255, 0, 255)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+end
+
+function calculateCollision(ball, paddle)
+    halfPaddleY =  (paddle.y + paddle.height) / 2
+    halfBallY = (ball.y + ball.height) / 2
+    halfPaddleHeight = paddle.height / 2
+
+    ballTop = ball.y
+    ballBottom = ball.y + ball.height
+
+    if(halfPaddleY < halfBallY) then
+        print('sotto')
+        collisionValue = (ballTop - halfPaddleY) / halfPaddleHeight
+    else
+        print('sopra')
+        collisionValue = (ballBottom - halfPaddleY) / halfPaddleHeight
+    end
+    collisionValue = math.abs(collisionValue)
+    print(collisionValue)
+
+    return collisionValue
 end
