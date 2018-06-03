@@ -367,6 +367,7 @@ function love.draw()
     -- display FPS for debugging; simply comment out to remove
     displayFPS()
     displayAI()
+    displayDebugInfo(player1, player2, ball)
 
     -- end our drawing to push
     push:apply('end')
@@ -381,7 +382,7 @@ function displayAI()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 255, 0, 255)
     love.graphics.print('AI P1: ' .. (p1AI and "enabled" or "disabled") , 10, VIRTUAL_HEIGHT -10)
-    love.graphics.print('AI P2: ' .. (p2AI and "enabled" or "disabled"), VIRTUAL_WIDTH - 100, VIRTUAL_HEIGHT -10)
+    love.graphics.print('AI P2: ' .. (p2AI and "enabled" or "disabled"), VIRTUAL_WIDTH - 80, VIRTUAL_HEIGHT -10)
 end
 
 function displayScore()
@@ -402,25 +403,20 @@ function displayFPS()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 255, 0, 255)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+    
+    
+end
+
+function displayDebugInfo(paddle1, paddle2, ball)
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.printf('Paddle 1: ('..paddle1.y..')', 0, 10, VIRTUAL_WIDTH, 'right')
+    love.graphics.printf('Paddle 2: ('..paddle2.y..')', 0, 20, VIRTUAL_WIDTH, 'right')
+    love.graphics.printf('Ball: ('.. ball.y ..','.. ball.x ..')', 0, 30, VIRTUAL_WIDTH, 'right')
+
+    love.graphics.line(ball.x, ball.y, paddle1.x, paddle1.y + paddle1.height)
 end
 
 function calculateCollision(ball, paddle)
-    halfPaddleY =  (paddle.y + paddle.height) / 2
-    halfBallY = (ball.y + ball.height) / 2
-    halfPaddleHeight = paddle.height / 2
-
-    ballTop = ball.y
-    ballBottom = ball.y + ball.height
-
-    if(halfPaddleY < halfBallY) then
-        print('sotto')
-        collisionValue = (ballTop - halfPaddleY) / halfPaddleHeight
-    else
-        print('sopra')
-        collisionValue = (ballBottom - halfPaddleY) / halfPaddleHeight
-    end
-    collisionValue = math.abs(collisionValue)
-    print(collisionValue)
-
-    return collisionValue
+    
 end
