@@ -164,9 +164,13 @@ function love.update(dt)
       local acceleration = calculateAcceleration(ball, player1)
 
       if(acceleration == 0) then
-        ball.dx = -BALL_SPEED
+        if(ball.dx > 0) then
+          ball.dx = -BALL_SPEED
+        else
+          ball.dx = BALL_SPEED
+        end
       else
-        ball.dx = -ball.dx *acceleration
+        ball.dx = -ball.dx * acceleration
       end
 
       ball.x = player1.x + 5
@@ -186,9 +190,13 @@ function love.update(dt)
       local acceleration = calculateAcceleration(ball, player2)
 
       if(acceleration == 0) then
-        ball.dx = -BALL_SPEED
+        if(ball.dx > 0) then
+          ball.dx = -BALL_SPEED
+        else
+          ball.dx = BALL_SPEED
+        end
       else
-        ball.dx = -ball.dx *acceleration
+        ball.dx = -ball.dx * acceleration
       end
 
       ball.x = player2.x - 4
