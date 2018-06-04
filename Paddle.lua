@@ -32,6 +32,9 @@ function Paddle:init(x, y, width, height)
     self.width = width
     self.height = height
     self.dy = 0
+    self.dyOld=0;
+    self.momentum = 0
+    self.yOld = self.y;
 end
 
 function Paddle:update(dt)
@@ -48,6 +51,15 @@ function Paddle:update(dt)
     else
         self.y = math.min(VIRTUAL_HEIGHT - self.height, self.y + self.dy * dt)
     end
+
+    if(self.dyOld ~= self.dy or self.dy == 0 or self.yOld == self.y) then
+        self.momentum = 0
+    else 
+        self.momentum = self.momentum+1
+    end
+    
+    self.dyOld = self.dy
+    self.yOld = self.y
 end
 
 function Paddle:auto(ball, PADDLE_SPEED)

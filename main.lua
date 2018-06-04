@@ -50,6 +50,9 @@ VIRTUAL_HEIGHT = 243
 -- paddle movement speed
 PADDLE_SPEED = 200
 
+-- initial ball speed
+BALL_SPEED = 150
+
 --[[
 Called just once at the beginning of the game; used to set up
 game objects, variables, etc. and prepare the game world.
@@ -147,9 +150,9 @@ function love.update(dt)
     -- on player who last scored
     ball.dy = math.random(-50, 50)
     if servingPlayer == 1 then
-      ball.dx = math.random(140, 200)
+      ball.dx = BALL_SPEED
     else
-      ball.dx = -math.random(140, 200)
+      ball.dx = -BALL_SPEED
     end
   elseif gameState == 'play' then
     -- detect ball collision with paddles, reversing dx if true and
@@ -158,10 +161,14 @@ function love.update(dt)
     if ball:collides(player1) then
 
       local bounce = math.floor(calculateCollision(ball, player1))
+      local acceleration = calculateAcceleration(ball, player1)
 
-      print('player1: ' .. bounce)
+      if(acceleration == 0) then
+        ball.dx = -BALL_SPEED
+      else
+        ball.dx = -ball.dx *acceleration
+      end
 
-      ball.dx = -ball.dx * 1.03
       ball.x = player1.x + 5
 
       -- keep velocity going in the same direction, but randomize it
@@ -174,9 +181,16 @@ function love.update(dt)
       sounds['paddle_hit']:play()
     end
     if ball:collides(player2) then
+      
       local bounce = math.floor(calculateCollision(ball, player2))
-      print('player2: ' .. bounce)
-      ball.dx = -ball.dx * 1.03
+      local acceleration = calculateAcceleration(ball, player2)
+
+      if(acceleration == 0) then
+        ball.dx = -BALL_SPEED
+      else
+        ball.dx = -ball.dx *acceleration
+      end
+
       ball.x = player2.x - 4
 
       -- keep velocity going in the same direction, but randomize it
@@ -429,6 +443,8 @@ function displayDebugInfo(paddle1, paddle2, ball)
   love.graphics.printf('Paddle 2: ('..paddle2.y..')', 0, 20, VIRTUAL_WIDTH-5, 'right')
   love.graphics.printf('Ball: ('.. ball.y ..','.. ball.x ..')', 0, 30, VIRTUAL_WIDTH-5, 'right')
 
+  love.graphics.printf('Paddle 1 dy: ('.. math.abs(paddle1.momentum) ..')', 0, 40, VIRTUAL_WIDTH-5, 'right')
+
   love.graphics.line(ball.x, ball.y, paddle1.x, paddle1.y + paddle1.height)
 end
 
@@ -444,4 +460,12 @@ function calculateCollision(ball, paddle)
   collisionValue = collisionValue * 150
   collisionValue = collisionValue + 1
   return collisionValue
+end
+
+function calculateAcceleration(ball, paddle)
+  if(paddle.momentum == 0) then
+    return 0
+  else
+    return (1 + paddle.momentum / 10)
+  end
 end
