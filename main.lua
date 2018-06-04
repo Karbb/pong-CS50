@@ -181,7 +181,7 @@ function love.update(dt)
       sounds['paddle_hit']:play()
     end
     if ball:collides(player2) then
-      
+
       local bounce = math.floor(calculateCollision(ball, player2))
       local acceleration = calculateAcceleration(ball, player2)
 
@@ -367,6 +367,8 @@ function love.draw()
     love.graphics.setFont(smallFont)
     love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
     love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+    love.graphics.printf('Press N / M to enable paddle AI!', 0, 30, VIRTUAL_WIDTH, 'center')
+    love.graphics.printf('Press D to enable debug mode!', 0, 40, VIRTUAL_WIDTH, 'center')
   elseif gameState == 'serve' then
     -- UI messages
     love.graphics.setFont(smallFont)
@@ -445,7 +447,7 @@ function displayDebugInfo(paddle1, paddle2, ball)
 
   love.graphics.printf('Paddle 1 dy: ('.. math.abs(paddle1.momentum) ..')', 0, 40, VIRTUAL_WIDTH-5, 'right')
 
-  love.graphics.line(ball.x, ball.y, paddle1.x, paddle1.y + paddle1.height)
+  love.graphics.line(ball.x, (ball.y + ball.height / 2), paddle1.x, (paddle1.y + paddle1.height/2 ))
 end
 
 function calculateCollision(ball, paddle)
