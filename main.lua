@@ -164,6 +164,7 @@ function love.update(dt)
 
     -- player 1
   if p1AI == false then
+    predict(ball, player1, dt)
     if love.keyboard.isDown('w') then
       player1.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('s') then
@@ -177,6 +178,7 @@ function love.update(dt)
 
   -- player 2
   if p2AI == false then
+    predict(ball, player2, dt)
     if love.keyboard.isDown('up') then
       player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then

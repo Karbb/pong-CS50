@@ -99,11 +99,8 @@ function predict(ball, paddle, dt)
     if(not ballPredicted) then
         -- copy the ball into the predicted ball
         ballPredicted = shallowcopy(ball)
-        
-        if ( paddle.x < halfWidth ) then
-            -- left paddle 
 
-            while(ballPredicted.x > paddle.x + paddle.width ) do
+            while(ballPredicted.x > paddle.x + paddle.width or ballPredicted.x + ballPredicted.width < paddle.x) do
                 ballPredicted.x = ballPredicted.x + ballPredicted.dx * dt
                 ballPredicted.y = ballPredicted.y + ballPredicted.dy * dt
 
@@ -120,25 +117,6 @@ function predict(ball, paddle, dt)
                 end
             end
             
-        elseif ( paddle.x >= halfWidth ) then
-            -- right paddle
-    
-            while (ballPredicted.x + ballPredicted.width < paddle.x) do
-                ballPredicted.x = ballPredicted.x + ballPredicted.dx * dt
-                ballPredicted.y = ballPredicted.y + ballPredicted.dy * dt
-
-                if ballPredicted.y <= 0 then
-                    ballPredicted.y = 0
-                    ballPredicted.dy = -ballPredicted.dy
-                end
-
-                if ballPredicted.y >= VIRTUAL_HEIGHT - 4 then
-                    ballPredicted.y = VIRTUAL_HEIGHT - 4
-                    ballPredicted.dy = -ballPredicted.dy
-                end
-            end
-
-        end
     else
         if (ballPredicted.dx * ball.dx < 0) then
         -- reset prediction if ball horizontal direction is changed
