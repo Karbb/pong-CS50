@@ -62,59 +62,91 @@ function Paddle:update(dt)
     self.yOld = self.y
 end
 
-function Paddle:auto(ball, PADDLE_SPEED)
+function Paddle:auto(ball, PADDLE_SPEED, dt)
     self.dy = 0
-    if not paddleWillHitBall(self, ball) then
-        if (ball.y < self.y) then
+
+    if not paddleWillHitBall(self, dt) and ballPredicted then
+        if (ballPredicted.y < self.y) then
             self.dy = -PADDLE_SPEED
-        elseif ( (ball.y + ball.height) > (self.y + self.height)) then
+        elseif ( (ballPredicted.y + ball.height) > (self.y + self.height)) then
             self.dy = PADDLE_SPEED
         end
     end
 end
 
-paddleWillHitBall = function(paddle)
-
-    local projectY = projectBall(paddle)
-
-    if(projectY == nil) then
-        return true;
-    end
-
-    if ((projectY < paddle.y) or (projectY + ball.height > paddle.y + paddle.height)) then
-        return false
-    else
-        return true
-    end
-end
-
-projectBall = function(paddle)
+paddleWillHitBall = function(paddle, dt)
     halfWidth = (math.floor(VIRTUAL_WIDTH / 2) - 1 )
 
-    local ballX = ball.x
-    local ballY = ball.y
+    if ( ( paddle.x < halfWidth ) and ( ball.dx > 0 ) ) or ( paddle.x >= halfWidth ) and ( ball.dx < 0 ) then
+        --ai inactive when ball is moving away from paddle
+        return true
+    end
 
-    if ( paddle.x < halfWidth ) and ( ball.dx < 0 ) then
-        -- left paddle --> dx < 0
-        
-        while(ballX <= 0) do
-            ballX = ballX + ball.dx
-            ballY = ballY + ball.dy
+    predict(ball, paddle, dt)
+
+    if(ballPredicted) then
+        if ((ballPredicted.y < paddle.y) or (ballPredicted.y + ball.height > paddle.y + paddle.height)) then
+            return false
+        else
+            return true
         end
 
-        return ballY
-        
-    elseif ( paddle.x >= halfWidth ) and ( ball.dx > 0 )  then
-        -- right paddle --> dx > 0
-
-        while (ballX + ball.width >= VIRTUAL_WIDTH) do
-            ballX = ballX + ball.dx
-            ballY = ballY + ball.dy
-        end
-
-        return ballY
     end
 end
+
+function predict(ball, paddle, dt)
+
+    if(not ballPredicted) then
+        -- copy the ball into the predicted ball
+        ballPredicted = shallowcopy(ball)
+        
+        if ( paddle.x < halfWidth ) then
+            -- left paddle 
+
+            while(ballPredicted.x > paddle.x + paddle.width ) do
+                ballPredicted.x = ballPredicted.x + ballPredicted.dx * dt
+                ballPredicted.y = ballPredicted.y + ballPredicted.dy * dt
+
+                if ballPredicted.y <= 0 then
+                    -- top bounce
+                    ballPredicted.y = 0
+                    ballPredicted.dy = -ballPredicted.dy
+                end
+
+                if ballPredicted.y >= VIRTUAL_HEIGHT - 4 then
+                    -- bottom bounce
+                    ballPredicted.y = VIRTUAL_HEIGHT - 4
+                    ballPredicted.dy = -ballPredicted.dy
+                end
+            end
+            
+        elseif ( paddle.x >= halfWidth ) then
+            -- right paddle
+    
+            while (ballPredicted.x + ballPredicted.width < paddle.x) do
+                ballPredicted.x = ballPredicted.x + ballPredicted.dx * dt
+                ballPredicted.y = ballPredicted.y + ballPredicted.dy * dt
+
+                if ballPredicted.y <= 0 then
+                    ballPredicted.y = 0
+                    ballPredicted.dy = -ballPredicted.dy
+                end
+
+                if ballPredicted.y >= VIRTUAL_HEIGHT - 4 then
+                    ballPredicted.y = VIRTUAL_HEIGHT - 4
+                    ballPredicted.dy = -ballPredicted.dy
+                end
+            end
+
+        end
+    else
+        if (ballPredicted.dx * ball.dx < 0) then
+        -- reset prediction if ball horizontal direction is changed
+            ballPredicted = nil
+        end
+    end
+end
+
 
 --[[
     To be called by our main function in `love.draw`, ideally. Uses
@@ -126,8 +158,27 @@ end
 function Paddle:render()
     --print(self.x, self.y, self.width, self.height)
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
+    if(ballPredicted and debug) then
+        love.graphics.setColor(255,0,0)
+        love.graphics.rectangle('line', ballPredicted.x, ballPredicted.y, ballPredicted.width, ballPredicted.height)
+        love.graphics.setColor(0, 255, 0)
+    end
     -- love.graphics.line(self.x, math.floor(self.height / 2 + self.y), ball.x, math.floor(ball.vCenter + ball.y))
     -- love.graphics.line(self.x, self.y, ball.x, math.floor(ball.vCenter + ball.y))
     -- love.graphics.line(self.x, self.y + self.height, ball.x, math.floor(ball.vCenter + ball.y))
     -- love.graphics.points(self.x + self.width + 1, self.y + self.height / 2)
+end
+
+function shallowcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in pairs(orig) do
+            copy[orig_key] = orig_value
+        end
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
 end

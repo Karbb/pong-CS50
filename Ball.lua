@@ -26,6 +26,8 @@ function Ball:init(x, y, width, height)
     self.dx = 0
 
     self.vCenter = self.height / 2;
+
+    self.acceleration = 0
 end
 
 --[[

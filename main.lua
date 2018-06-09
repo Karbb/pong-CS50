@@ -146,31 +146,64 @@ across system hardware.
 ]]
 function love.update(dt)
   if gameState == 'serve' then
+
+    -- reset players position every round
+  player1 = Paddle(10, 30, 5, 20)
+  player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
+
     -- before switching to play, initialize ball's velocity based
     -- on player who last scored
     ball.dy = math.random(-50, 50)
+
     if servingPlayer == 1 then
       ball.dx = BALL_SPEED
     else
       ball.dx = -BALL_SPEED
     end
   elseif gameState == 'play' then
+
+    -- player 1
+  if p1AI == false then
+    if love.keyboard.isDown('w') then
+      player1.dy = -PADDLE_SPEED
+    elseif love.keyboard.isDown('s') then
+      player1.dy = PADDLE_SPEED
+    else
+      player1.dy = 0
+    end
+  else
+    player1:auto(ball, PADDLE_SPEED, dt)
+  end
+
+  -- player 2
+  if p2AI == false then
+    if love.keyboard.isDown('up') then
+      player2.dy = -PADDLE_SPEED
+    elseif love.keyboard.isDown('down') then
+      player2.dy = PADDLE_SPEED
+    else
+      player2.dy = 0
+    end
+  else
+    player2:auto(ball, PADDLE_SPEED, dt)
+  end
+
     -- detect ball collision with paddles, reversing dx if true and
     -- slightly increasing it, then altering the dy based on the position
     -- at which it collided, then playing a sound effect
     if ball:collides(player1) then
 
       local bounce = math.floor(calculateCollision(ball, player1))
-      local acceleration = calculateAcceleration(ball, player1)
+      ball.acceleration = calculateAcceleration(ball, player1)
 
-      if(acceleration == 0) then
+      if(ball.acceleration == 0) then
         if(ball.dx > 0) then
           ball.dx = -BALL_SPEED
         else
           ball.dx = BALL_SPEED
         end
       else
-        ball.dx = -ball.dx * acceleration
+        ball.dx = -ball.dx * ball.acceleration
       end
 
       ball.x = player1.x + 5
@@ -187,16 +220,16 @@ function love.update(dt)
     if ball:collides(player2) then
 
       local bounce = math.floor(calculateCollision(ball, player2))
-      local acceleration = calculateAcceleration(ball, player2)
+      ball.acceleration = calculateAcceleration(ball, player2)
 
-      if(acceleration == 0) then
+      if(ball.acceleration == 0) then
         if(ball.dx > 0) then
           ball.dx = -BALL_SPEED
         else
           ball.dx = BALL_SPEED
         end
       else
-        ball.dx = -ball.dx * acceleration
+        ball.dx = -ball.dx * ball.acceleration
       end
 
       ball.x = player2.x - 4
@@ -263,35 +296,6 @@ function love.update(dt)
         ball:reset()
       end
     end
-  end
-
-  --
-  -- paddles can move no matter what state we're in
-  --
-  -- player 1
-  if p1AI == false then
-    if love.keyboard.isDown('w') then
-      player1.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('s') then
-      player1.dy = PADDLE_SPEED
-    else
-      player1.dy = 0
-    end
-  else
-    player1:auto(ball, PADDLE_SPEED)
-  end
-
-  -- player 2
-  if p2AI == false then
-    if love.keyboard.isDown('up') then
-      player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
-      player2.dy = PADDLE_SPEED
-    else
-      player2.dy = 0
-    end
-  else
-    player2:auto(ball, PADDLE_SPEED)
   end
 
   -- update our ball based on its DX and DY only if we're in play state;
@@ -419,9 +423,8 @@ Simple function for rendering the scores.
 ]]
 function displayAI()
   -- score AI
-
   love.graphics.setFont(smallFont)
-  love.graphics.setColor(0, 255, 0, 255)
+  love.graphics.setColor(0, 255, 0)
   love.graphics.print('AI P1: ' .. (p1AI and "enabled" or "disabled") , 10, VIRTUAL_HEIGHT -10)
   love.graphics.print('AI P2: ' .. (p2AI and "enabled" or "disabled"), VIRTUAL_WIDTH - 80, VIRTUAL_HEIGHT -10)
 end
@@ -442,20 +445,20 @@ Renders the current FPS.
 function displayFPS()
   -- simple FPS display across all states
   love.graphics.setFont(smallFont)
-  love.graphics.setColor(0, 255, 0, 255)
+  love.graphics.setColor(0, 255, 0)
   love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
 
 function displayDebugInfo(paddle1, paddle2, ball)
   love.graphics.setFont(smallFont)
-  love.graphics.setColor(0, 255, 0, 255)
+  love.graphics.setColor(0, 255, 0)
   love.graphics.printf('Paddle 1: ('..paddle1.y..')', 0, 10, VIRTUAL_WIDTH-5, 'right')
   love.graphics.printf('Paddle 2: ('..paddle2.y..')', 0, 20, VIRTUAL_WIDTH-5, 'right')
   love.graphics.printf('Ball: ('.. ball.y ..','.. ball.x ..')', 0, 30, VIRTUAL_WIDTH-5, 'right')
-
   love.graphics.printf('Paddle 1 dy: ('.. math.abs(paddle1.momentum) ..')', 0, 40, VIRTUAL_WIDTH-5, 'right')
 
   love.graphics.line(ball.x, (ball.y + ball.height / 2), paddle1.x, (paddle1.y + paddle1.height/2 ))
+  love.graphics.line(ball.x, (ball.y + ball.height / 2), paddle2.x, (paddle2.y + paddle2.height/2 ))
 end
 
 function calculateCollision(ball, paddle)
